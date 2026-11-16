@@ -1,0 +1,51 @@
+name: Doubler nightly scan
+
+on:
+  schedule:
+    # 22:30 UTC Mon-Fri = 6:30am Singapore Tue-Sat, after every US close
+    # (US market closes 20:00 UTC in summer, 21:00 UTC in winter).
+    # GitHub may start scheduled runs 5-30 minutes late.
+    - cron: "30 22 * * 1-5"
+  workflow_dispatch: {}      # adds a "Run workflow" button for a manual run
+
+permissions:
+  contents: write            # lets the job save data/scan.json back to the repo
+
+concurrency:
+  group: nightly-scan
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install packages
+        run: pip install yfinance pandas numpy lxml
+
+      - name: Scan watchlist + S&P 500
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.9004141794:AAFMytPQK4Hb7-uZE6HvknKJLkDknu9Ik7M }}
+          TELEGRAM_CHAT_ID: ${{ secrets.1605220405 }}
+          APP_URL: ${{ vars.https://usm-sg.github.io/doubler/ }}
+        run: python scanner/nightly_scan.py --sp500
+
+      - name: Save results to the repo
+        run: |
+          git config user.name "doubler-nightly"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Nightly scan $(date -u +%Y-%m-%d)"
+            git pull --rebase
+            git push
+          fi
