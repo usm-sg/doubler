@@ -32,9 +32,9 @@ jobs:
 
       - name: Scan watchlist + S&P 500
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.9004141794:AAFMytPQK4Hb7-uZE6HvknKJLkDknu9Ik7M }}
-          TELEGRAM_CHAT_ID: ${{ secrets.1605220405 }}
-          APP_URL: ${{ vars.https://usm-sg.github.io/doubler/ }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          APP_URL: ${{ vars.APP_URL }}
         run: python scanner/nightly_scan.py --sp500
 
       - name: Save results to the repo
