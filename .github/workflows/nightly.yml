@@ -18,24 +18,33 @@ concurrency:
 jobs:
   scan:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 75        # first run downloads ~2 years for ~3,000 stocks; later runs ~5-10 min
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: pip
+
+      - name: Restore price cache from the last run
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: prices-${{ github.run_id }}
+          restore-keys: |
+            prices-
 
       - name: Install packages
-        run: pip install yfinance pandas numpy lxml
+        run: pip install -U yfinance pandas numpy lxml
 
-      - name: Scan watchlist + S&P 500
+      - name: Scan watchlist + whole US market
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           APP_URL: ${{ vars.APP_URL }}
-        run: python scanner/nightly_scan.py --sp500
+        # Options: --universe sp500 (watchlist + S&P 500 only), --universe watchlist,
+        #          --min-price 5, --min-dollar-volume 10 (in $ millions per day)
+        run: python scanner/nightly_scan.py --universe all
 
       - name: Save results to the repo
         run: |
